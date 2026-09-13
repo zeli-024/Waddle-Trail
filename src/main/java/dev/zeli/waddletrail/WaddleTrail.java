@@ -2,6 +2,8 @@ package dev.zeli.waddletrail;
 
 import com.mojang.logging.LogUtils;
 import dev.zeli.waddletrail.config.ConfigRegistration;
+import dev.zeli.waddletrail.command.WaddleTrailCommands;
+import dev.zeli.waddletrail.locator.PlayerPositionService;
 import dev.zeli.waddletrail.storage.StorageLayout;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -20,11 +22,14 @@ public final class WaddleTrail {
     public WaddleTrail(IEventBus modBus, ModContainer container) {
         ConfigRegistration.register(container);
         NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(PlayerPositionService.INSTANCE);
+        NeoForge.EVENT_BUS.register(WaddleTrailCommands.INSTANCE);
         LOGGER.info("Loading {}", DISPLAY_NAME);
     }
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         StorageLayout.createServerDirectories();
+        PlayerPositionService.INSTANCE.start(event.getServer());
     }
 }
