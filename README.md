@@ -1,17 +1,2 @@
 # Waddle Trail - Xaero's Utils
-
-Developer scaffold for Minecraft 1.21.1 and NeoForge 21.1.x.
-
-Current draft: `0.0.1`
-
-## Build
-
-Requires a 64-bit Java 21 JDK.
-
-```bash
-./gradlew build
-```
-
-Output: `build/libs/WaddleTrail_0.0.1-neoforge-1.21.1.jar`
-
-See [FEATURES.md](FEATURES.md) for the prepared implementation packages.
+<img width="500" height="500" alt="Untitled2_20260912151425" src="https://github.com/user-attachments/assets/58c1ea2b-7883-4626-8ed0-c7f82a7e5374" />
