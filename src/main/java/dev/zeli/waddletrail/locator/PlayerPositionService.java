@@ -1,14 +1,18 @@
 package dev.zeli.waddletrail.locator;
 
 import dev.zeli.waddletrail.config.PlayerLocatorConfig;
+import dev.zeli.waddletrail.network.PlayerPositionsPayload;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -38,13 +42,18 @@ public final class PlayerPositionService {
 
     @SubscribeEvent
     public void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) capture(player, true);
+        if (event.getEntity() instanceof ServerPlayer player) {
+            capture(player, true);
+            PacketDistributor.sendToPlayer(player, PlayerPositionsPayload.fromServer(true, List.copyOf(positions.values())));
+            PacketDistributor.sendToAllPlayers(PlayerPositionsPayload.fromServer(false, List.of(positions.get(player.getUUID()))));
+        }
     }
 
     @SubscribeEvent
     public void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             capture(player, false);
+            PacketDistributor.sendToAllPlayers(PlayerPositionsPayload.fromServer(false, List.of(positions.get(player.getUUID()))));
             save();
         }
     }
@@ -56,7 +65,12 @@ public final class PlayerPositionService {
         saveTickCounter++;
         if (positionTickCounter >= PlayerLocatorConfig.UPDATE_INTERVAL_TICKS.get()) {
             positionTickCounter = 0;
-            for (ServerPlayer player : event.getServer().getPlayerList().getPlayers()) capture(player, true);
+            List<PlayerPosition> online = new ArrayList<>();
+            for (ServerPlayer player : event.getServer().getPlayerList().getPlayers()) {
+                capture(player, true);
+                online.add(positions.get(player.getUUID()));
+            }
+            if (!online.isEmpty()) PacketDistributor.sendToAllPlayers(PlayerPositionsPayload.fromServer(false, List.copyOf(online)));
         }
         if (dirty && saveTickCounter >= SAVE_INTERVAL_TICKS) save();
     }
